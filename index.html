@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grup Kelas PBL - WhatsApp UI & Dashboard Guru</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #d1d7db;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .app-wrapper {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            max-width: 1600px;
+            background-color: #ffffff;
+            box-shadow: 0 1px 1px 0 rgba(0, 0, 0, .06), 0 2px 5px 0 rgba(0, 0, 0, .2);
+            overflow: hidden;
+        }
+
+        @media (min-width: 1440px) {
+            .app-wrapper {
+                width: 95%;
+                height: 95%;
+                border-radius: 6px;
+            }
+        }
+
+        /* SIDEBAR (Kiri) */
+        .sidebar {
+            width: 30%;
+            min-width: 300px;
+            max-width: 415px;
+            background-color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #d1d7db;
+        }
+
+        .sidebar-header {
+            height: 59px;
+            background-color: #f0f2f5;
+            display: flex;
+            align-items: center;
+            padding: 10px 16px;
+            border-bottom: 1px solid #d1d7db;
+            color: #111b21;
+            font-weight: 500;
+        }
+
+        .sidebar-title {
+            padding: 15px 16px;
+            background-color: #ffffff;
+            color: #008069;
+            font-size: 14px;
+            font-weight: 600;
+            border-bottom: 1px solid #f0f2f5;
+        }
+
+        .radio-group {
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .radio-item {
+            display: flex;
+            align-items: center;
+            padding: 14px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid #f2f2f2;
+            transition: background 0.2s;
+        }
+
+        .radio-item:hover {
+            background-color: #f5f6f6;
+        }
+
+        .radio-item input[type="radio"] {
+            margin-right: 15px;
+            transform: scale(1.2);
+            accent-color: #008069;
+        }
+
+        .contact-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #fff;
+            margin-right: 15px;
+            font-size: 18px;
+        }
+
+        .contact-info {
+            flex: 1;
+        }
+
+        .contact-name {
+            font-size: 16px;
+            color: #111b21;
+            font-weight: 500;
+        }
+
+        /* MAIN CONTENT HOLDER (Kanan) */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: #efeae2;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* TAMPILAN 1: INTERFACE CHAT WHATSAPP */
+        .view-panel {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            height: 100%;
+        }
+
+        #chatView::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
+            opacity: 0.08;
+            z-index: 0;
+        }
+
+        .chat-header,
+        .dashboard-header {
+            height: 59px;
+            background-color: #f0f2f5;
+            display: flex;
+            align-items: center;
+            padding: 10px 16px;
+            border-bottom: 1px solid #d1d7db;
+            z-index: 1;
+        }
+
+        .chat-header-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .chat-header-info .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #008069;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+
+        .chat-header-text h2,
+        .dashboard-header h2 {
+            font-size: 16px;
+            color: #111b21;
+            font-weight: 500;
+        }
+
+        .chat-header-text p {
+            font-size: 13px;
+            color: #667781;
+            margin-top: 2px;
+        }
+
+        .chat-window {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 8%;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 1;
+        }
+
+        .bubble {
+            max-width: 65%;
+            padding: 6px 7px 8px 9px;
+            border-radius: 7.5px;
+            font-size: 14.2px;
+            line-height: 19px;
+            position: relative;
+            box-shadow: 0 1px 0.5px rgba(11, 20, 26, .13);
+            display: inline-block;
+            word-wrap: break-word;
+            color: #111b21;
+        }
+
+        .bubble::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            width: 12px;
+            height: 12px;
+        }
+
+        .bubble.me {
+            background-color: #d9fdd3;
+            align-self: flex-end;
+            border-top-right-radius: 0;
+        }
+
+        .bubble.me::before {
+            right: -8px;
+            background: radial-gradient(circle at top right, transparent 50%, #d9fdd3 50%);
+        }
+
+        .bubble.other {
+            background-color: #ffffff;
+            align-self: flex-start;
+            border-top-left-radius: 0;
+        }
+
+        .bubble.other::before {
+            left: -8px;
+            background: radial-gradient(circle at top left, transparent 50%, #ffffff 50%);
+        }
+
+        .bubble-name {
+            font-size: 12.5px;
+            font-weight: 500;
+            margin-bottom: 2px;
+            display: block;
+        }
+
+        .bubble-time {
+            font-size: 11px;
+            color: #667781;
+            float: right;
+            margin: 10px 0 -5px 15px;
+        }
+
+        .input-area {
+            min-height: 62px;
+            background-color: #f0f2f5;
+            display: flex;
+            align-items: center;
+            padding: 10px 16px;
+            gap: 10px;
+            z-index: 1;
+        }
+
+        .input-area input {
+            flex: 1;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 14px;
+            font-size: 15px;
+            background-color: #ffffff;
+            outline: none;
+        }
+
+        .input-area button {
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+            color: #54656f;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px;
+            border-radius: 50%;
+        }
+
+        .input-area button svg {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+        }
+
+        .censored-alert {
+            color: #842029;
+            background-color: #f8d7da;
+            padding: 6px 10px;
+            border-radius: 5px;
+            font-size: 13px;
+            font-style: italic;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border: 1px solid #f5c2c7;
+        }
+
+        /* TAMPILAN 2: DASHBOARD MONITORING PAK ANIES */
+        #dashboardView {
+            background-color: #f8fafc;
+            overflow-y: auto;
+            z-index: 1;
+        }
+
+        .dashboard-content {
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Baris Kartu Parameter (Metrics) */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        .card-metric {
+            background-color: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .card-metric h4 {
+            font-size: 13px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .card-metric .value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        /* Sektor Grafik & Detail */
+        .visual-section {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        .chart-container-box {
+            background-color: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .chart-container-box h3 {
+            font-size: 15px;
+            color: #1e293b;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        /* Style Tambahan untuk Kartu Pelanggaran & Korban */
+        .badge-korban {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #fef2f2;
+            border: 1px solid #fee2e2;
+            padding: 10px 14px;
+            border-radius: 6px;
+            color: #991b1b;
+            font-weight: 500;
+        }
+
+        .badge-korban .count {
+            background-color: #ef4444;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+        }
+
+        .kartu-pelanggaran {
+            background-color: #ffffff;
+            border-left: 4px solid #ef4444;
+            border-top: 1px solid #e2e8f0;
+            border-right: 1px solid #e2e8f0;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 12px;
+            border-radius: 0 6px 6px 0;
+            font-size: 13px;
+        }
+
+        .kartu-pelanggaran .meta {
+            display: flex;
+            justify-content: space-between;
+            color: #64748b;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .kartu-pelanggaran .text-block {
+            margin-top: 4px;
+            color: #334155;
+        }
+
+        .kartu-pelanggaran .text-inti {
+            font-size: 12px;
+            color: #7f8c8d;
+            background-color: #f8fafc;
+            padding: 4px 6px;
+            border-radius: 4px;
+            margin-top: 4px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-wrapper">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div
+                    style="width: 40px; height: 40px; border-radius: 50%; background-color: #dfe5e7; margin-right: 15px; display: flex; align-items:center; justify-content:center; color:#54656f;">
+                    <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                        <path
+                            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" />
+                    </svg>
+                </div>
+                <span>Simulasi Login Pengguna</span>
+            </div>
+
+            <div class="sidebar-title">PILIH IDENTITAS AKTOR</div>
+
+            <div class="radio-group">
+                <label class="radio-item">
+                    <input type="radio" name="user" value="Tafarel" checked onclick="toggleViewMode()">
+                    <div class="contact-avatar"
+                        style="background-image: url('img/tafarel.jpeg'); background-size: cover; background-position: center; border: 1px solid #e1e1e1;">
+                    </div>
+                    <div class="contact-info">
+                        <div class="contact-name">Tafarel</div>
+                    </div>
+                </label>
+                <label class="radio-item">
+                    <input type="radio" name="user" value="Budi" onclick="toggleViewMode()">
+                    <div class="contact-avatar"
+                        style="background-image: url('img/budi.jpeg'); background-size: cover; background-position: center; border: 1px solid #e1e1e1;">
+                    </div>
+                    <div class="contact-info">
+                        <div class="contact-name">Budi</div>
+                    </div>
+                </label>
+                <label class="radio-item">
+                    <input type="radio" name="user" value="Siti" onclick="toggleViewMode()">
+                    <div class="contact-avatar"
+                        style="background-image: url('img/siti.jpeg'); background-size: cover; background-position: center; border: 1px solid #e1e1e1;">
+                    </div>
+                    <div class="contact-info">
+                        <div class="contact-name">Siti</div>
+                    </div>
+                </label>
+                <label class="radio-item">
+                    <input type="radio" name="user" value="Anies" onclick="toggleViewMode()">
+                    <div class="contact-avatar"
+                        style="background-image: url('img/anies.jpeg'); background-size: cover; background-position: center; border: 1px solid #e1e1e1;">
+                    </div>
+                    <div class="contact-info">
+                        <div class="contact-name">Pak Anies (Guru)</div>
+                        <div style="font-size: 12px; color: #667781;">🔓 Dashboard Pengawasan Grup</div>
+                    </div>
+                </label>
+            </div>
+        </div>
+
+        <div class="main-content">
+
+            <div id="chatView" class="view-panel">
+                <div class="chat-header">
+                    <div class="chat-header-info">
+                        <div class="avatar"
+                            style="background-image: url('img/grup.jpeg'); background-size: cover; background-position: center; border: 1px solid #e1e1e1;">
+                        </div>
+                        <div class="chat-header-text">
+                            <h2>Warga Data Analyst PPKD JS</h2>
+                            <p>Tafarel, Budi, Siti</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="chat-window" id="chatContainer"></div>
+                <div class="input-area">
+                    <input type="text" id="messageInput" placeholder="Ketik pesan..."
+                        onkeypress="handleKeyPress(event)">
+                    <button onclick="kirimPesan()">
+                        <svg viewBox="0 0 24 24" width="24" height="24">
+                            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div id="dashboardView" class="view-panel" style="display: none;">
+                <div class="dashboard-header">
+                    <h2>📊 Dashboard Analisis & Kesehatan Mental Kelas (Pak Anies)</h2>
+                </div>
+                <div class="dashboard-content">
+                    <div class="metrics-grid">
+                        <div class="card-metric" style="border-top: 4px solid #3498db;">
+                            <h4>Total Pesan Masuk</h4>
+                            <div class="value" id="countTotal">0</div>
+                        </div>
+                        <div class="card-metric" style="border-top: 4px solid #e74c3c;">
+                            <h4>Terindikasi Bullying</h4>
+                            <div class="value" id="countBully" style="color: #e74c3c;">0</div>
+                        </div>
+                        <div class="card-metric" style="border-top: 4px solid #2ecc71;">
+                            <h4>Pesan Kondusif/Aman</h4>
+                            <div class="value" id="countAman" style="color: #2ecc71;">0</div>
+                        </div>
+                    </div>
+
+                    <div class="visual-section">
+                        <div class="chart-container-box">
+                            <h3>Frekuensi Pelanggaran Ujaran Bullying per Siswa</h3>
+                            <div style="position: relative; height:280px; width:100%">
+                                <canvas id="chartAktorBully"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="visual-section" style="grid-template-columns: 1fr 1fr; margin-top: 10px;">
+
+                        <div class="chart-container-box">
+                            <h3>Target Korban Perundungan (Deteksi Sistem)</h3>
+                            <div id="korbanContainer"
+                                style="display:flex; flex-direction:column; gap:8px; padding-top:5px;">
+                            </div>
+                        </div>
+
+                        <div class="chart-container-box">
+                            <h3>Log Histori Pelanggaran Chat</h3>
+                            <div id="logPelanggaranContainer"
+                                style="display:flex; flex-direction:column; gap:10px; max-height:280px; overflow-y:auto; padding-right:5px;">
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        let myChartInstance = null;
+        let lastChatCount = 0;
+
+        // Fungsi Toggle Mengubah Tampilan Chat / Dashboard
+        function toggleViewMode() {
+            const currentUser = document.querySelector('input[name="user"]:checked').value;
+            const chatPanel = document.getElementById('chatView');
+            const dashboardPanel = document.getElementById('dashboardView');
+
+            if (currentUser === "Anies") {
+                chatPanel.style.display = "none";
+                dashboardPanel.style.display = "flex";
+            } else {
+                chatPanel.style.display = "flex";
+                dashboardPanel.style.display = "none";
+                // Reset counter agar paksa me-render chat ulang saat ganti user siswa
+                lastChatCount = 0;
+                fetchChats();
+            }
+        }
+
+        function getColorForUser(name) {
+            const colors = { 'Budi': '#e67e22', 'Siti': '#e74c3c', 'Tafarel': '#3498db' };
+            return colors[name] || '#35cd96';
+        }
+
+        function getCurrentTime() {
+            const now = new Date();
+            return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        // Loop Polling Sinkronisasi ke Backend API
+        setInterval(fetchChats, 2000);
+
+        async function fetchChats() {
+            try {
+                // SINKRONISASI ALAMAT ENDPOINT SESUAI BACKEND KAMU (/get_chats)
+                const response = await fetch('https://tafarelputra-pbl-bullying-backend.hf.space/get_chats');
+                const data = await response.json();
+                const chats = data.chats || data.data || [];
+
+                // 1. UPDATE KEBUTUHAN DATA DASHBOARD (DI-UPDATE TERUS DI LATAR BELAKANG)
+                processDashboardData(chats);
+
+                // 2. RENDERING BUBBLE CHAT JIKA SEDANG DI MODE SISWA
+                const currentUser = document.querySelector('input[name="user"]:checked').value;
+                if (currentUser !== "Anies" && chats.length > lastChatCount) {
+                    lastChatCount = chats.length;
+                    const container = document.getElementById('chatContainer');
+                    const isScrolledToBottom = container.scrollHeight - container.clientHeight <= container.scrollTop + 50;
+
+                    container.innerHTML = '';
+                    chats.forEach(chat => {
+                        const isMe = chat.sender === currentUser;
+                        let displayedText = chat.original;
+
+                        if (chat.status === "Bullying") {
+                            displayedText = `<div class="censored-alert">🚫 Disensor sistem: Indikasi Cyberbullying</div>`;
+                        }
+
+                        container.innerHTML += `
+                            <div class="bubble ${isMe ? 'me' : 'other'}">
+                                ${!isMe ? `<span class="bubble-name" style="color: ${getColorForUser(chat.sender)}">${chat.sender}</span>` : ''}
+                                <span class="bubble-text">${displayedText}</span>
+                                <span class="bubble-time">${getCurrentTime()}</span>
+                            </div>
+                        `;
+                    });
+                    if (isScrolledToBottom) container.scrollTop = container.scrollHeight;
+                }
+            } catch (err) {
+                console.log("Menunggu koneksi server FastAPI aktif...", err);
+            }
+        }
+
+        // FUNGSI PENGOLAH STATISTIK & RE-RENDER DASHBOARD SECARA REAL-TIME
+        function processDashboardData(chats) {
+            let total = chats.length;
+            let bully = chats.filter(c => c.status === "Bullying").length;
+            let aman = total - bully;
+
+            // Update Angka di Card Metrics Dashboard
+            document.getElementById('countTotal').innerText = total;
+            document.getElementById('countBully').innerText = bully;
+            document.getElementById('countAman').innerText = aman;
+
+            // Daftar Siswa Aktif untuk dicari di dalam teks chat bullying
+            const daftarSiswa = ['tafarel', 'budi', 'siti'];
+            let korbanData = { 'Tafarel': 0, 'Budi': 0, 'Siti': 0 };
+            let logHTML = '';
+
+            // Hitung akumulasi pelanggaran per aktor pelaku
+            let aktorData = { 'Tafarel': 0, 'Budi': 0, 'Siti': 0 };
+
+            chats.forEach(chat => {
+                if (chat.status === "Bullying") {
+                    // A. Hitung Pelaku (Aktor)
+                    if (aktorData[chat.sender] !== undefined) {
+                        aktorData[chat.sender]++;
+                    }
+
+                    // B. DETEKSI KORBAN VIA REGEX MENTION
+                    let teksPesan = chat.original.toLowerCase();
+                    daftarSiswa.forEach(siswa => {
+                        // Regex mencari kecocokan nama mandiri di dalam kalimat chat
+                        let regexNama = new RegExp('\\b' + siswa + '\\b', 'g');
+                        if (regexNama.test(teksPesan)) {
+                            // Kapitalisasi nama depan untuk objek dictionary
+                            let namaKapital = siswa.charAt(0).toUpperCase() + siswa.slice(1);
+                            korbanData[namaKapital]++;
+                        }
+                    });
+
+                    // C. RENDER KARTU LOG PELANGGARAN
+                    logHTML += `
+                        <div class="kartu-pelanggaran">
+                            <div class="meta">
+                                <span style="color:#ef4444;">🔴 Pelaku: ${chat.sender}</span>
+                                <span style="font-size:11px; font-weight:normal;">ID: #${chat.id}</span>
+                            </div>
+                            <div class="text-block"><strong>Pesan Asli:</strong> "${chat.original}"</div>
+                        </div>
+                    `;
+                }
+            });
+
+            // Render Hasil Analisis Korban ke Interface
+            const korbanContainer = document.getElementById('korbanContainer');
+            korbanContainer.innerHTML = '';
+            Object.keys(korbanData).forEach(nama => {
+                if (korbanData[nama] > 0) {
+                    korbanContainer.innerHTML += `
+                        <div class="badge-korban">
+                            <span>🎯 Siswa: <strong>${nama}</strong> sering diserang</span>
+                            <span class="badge-korban count">${korbanData[nama]}x Disebut</span>
+                        </div>
+                    `;
+                }
+            });
+            if (korbanContainer.innerHTML === '') {
+                korbanContainer.innerHTML = '<div style="color:#64748b; font-style:italic; font-size:13px;">Belum ada target serangan terdeteksi.</div>';
+            }
+
+            // Render Log Kartu Pelanggaran ke Interface
+            const logContainer = document.getElementById('logPelanggaranContainer');
+            logContainer.innerHTML = logHTML ? logHTML : '<div style="color:#64748b; font-style:italic; font-size:13px;">Belum ada riwayat pelanggaran chat kelas.</div>';
+
+            // Update / Inisialisasi Chart.js Grafik Batang Pelaku
+            const ctx = document.getElementById('chartAktorBully').getContext('2d');
+            if (myChartInstance) {
+                myChartInstance.data.datasets[0].data = [aktorData['Tafarel'], aktorData['Budi'], aktorData['Siti']];
+                myChartInstance.update();
+            } else {
+                myChartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Tafarel', 'Budi', 'Siti'],
+                        datasets: [{
+                            label: 'Jumlah Pelanggaran Chat Kasar',
+                            data: [aktorData['Tafarel'], aktorData['Budi'], aktorData['Siti']],
+                            backgroundColor: ['rgba(52, 152, 219, 0.7)', 'rgba(230, 126, 34, 0.7)', 'rgba(231, 76, 60, 0.7)'],
+                            borderColor: ['#3498db', '#e67e22', '#e74c3c'],
+                            borderWidth: 1.5
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+                    }
+                });
+            }
+        }
+
+        function handleKeyPress(event) { if (event.key === 'Enter') kirimPesan(); }
+
+        async function kirimPesan() {
+            const inputElement = document.getElementById('messageInput');
+            const messageText = inputElement.value.trim();
+            const sender = document.querySelector('input[name="user"]:checked').value;
+
+            if (!messageText || sender === "Anies") return;
+            inputElement.value = '';
+
+            await fetch('https://tafarelputra-pbl-bullying-backend.hf.space/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sender: sender, text: messageText })
+            });
+
+            fetchChats();
+        }
+
+        // Panggil fetch awal saat load halaman pertama kali
+        fetchChats();
+    </script>
+</body>
+
+</html>
